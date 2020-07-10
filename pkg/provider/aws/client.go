@@ -4,6 +4,8 @@ package aws
 //go:generate mockgen -source=client.go -package=mock -destination=mock/client.go
 
 import (
+	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -38,11 +40,17 @@ type Client interface {
 	DeleteBucket(*s3.DeleteBucketInput) (*s3.DeleteBucketOutput, error)
 	ListObjects(*s3.ListObjectsInput) (*s3.ListObjectsOutput, error)
 	DeleteObjects(*s3.DeleteObjectsInput) (*s3.DeleteObjectsOutput, error)
+
+	// Organizations and Cost Explorer
+	GetOrg() *organizations.Organizations
+	GetCE() *costexplorer.CostExplorer
 }
 
 type AwsClient struct {
 	stsClient stsiface.STSAPI
 	s3Client  s3iface.S3API
+	orgClient *organizations.Organizations
+	ceClient *costexplorer.CostExplorer
 }
 
 // NewAwsClient creates an AWS client with credentials in the environment
@@ -78,6 +86,8 @@ func NewAwsClient(profile, region, configFile string) (Client, error) {
 	return &AwsClient{
 		stsClient: sts.New(sess),
 		s3Client:  s3.New(sess),
+		orgClient: organizations.New(sess),
+		ceClient: costexplorer.New(sess),
 	}, nil
 }
 
@@ -96,6 +106,8 @@ func NewAwsClientWithInput(input *AwsClientInput) (Client, error) {
 	return &AwsClient{
 		stsClient: sts.New(s),
 		s3Client:  s3.New(s),
+		orgClient: organizations.New(s),
+		ceClient: costexplorer.New(s),
 	}, nil
 }
 
@@ -125,4 +137,12 @@ func (c *AwsClient) ListObjects(input *s3.ListObjectsInput) (*s3.ListObjectsOutp
 
 func (c *AwsClient) DeleteObjects(input *s3.DeleteObjectsInput) (*s3.DeleteObjectsOutput, error) {
 	return c.s3Client.DeleteObjects(input)
+}
+
+func (c *AwsClient) GetOrg() *organizations.Organizations {
+	return c.orgClient
+}
+
+func (c *AwsClient) GetCE() *costexplorer.CostExplorer {
+	return c.ceClient
 }
