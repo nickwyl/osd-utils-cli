@@ -21,13 +21,18 @@ func NewCmdCost(streams genericclioptions.IOStreams) *cobra.Command {
 		Long: `The cost command allows for cost management on the AWS platform (other 
 platforms may be added in the future)`,
 		Run: func(cmd *cobra.Command, args []string) {
+			//
+			fmt.Println("This is acccessKeyID:", ops.accessKeyID)
+			//fmt.Println("this is config file: ", ops.configFile)
 
-			cmdutil.CheckErr(ops.complete(cmd, args))
-			cmdutil.CheckErr(ops.initAWSClients())
+			//ops.complete(cmd, args)
+			//ops.initAWSClients()
 
 			//ops.initAWSClients()
+
 		},
 	}
+
 
 	//Set flags
 	costCmd.PersistentFlags().StringVarP(&ops.accessKeyID, "aws-access-key-id", "a", "", "AWS Access Key ID")
@@ -37,11 +42,12 @@ platforms may be added in the future)`,
 	costCmd.PersistentFlags().StringVarP(&ops.region, "aws-region", "z", common.DefaultRegion, "specify AWS region")
 
 	//costCmd.AddCommand(awsCmd)
-	costCmd.AddCommand(newCmdGet(streams))
+	//costCmd.AddCommand(newCmdGet(streams))
 	costCmd.AddCommand(newCmdReconcile(streams))
 
 	return costCmd
 }
+
 
 var org *organizations.Organizations
 var ce *costexplorer.CostExplorer

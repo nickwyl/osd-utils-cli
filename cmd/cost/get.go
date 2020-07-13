@@ -45,12 +45,13 @@ to quickly create a Cobra application.`,
 			//Store cost
 			var cost float64 = 0
 
+fmt.Printf("%v\n%v\n%v\n%v\n",time,recursive,OU,cost)
 
-
-			if recursive {
-				getOUCostRecursive(&OU, org, ce, &time, &cost)
-				fmt.Printf("Cost of %s recursively is: %f\n", OUid, cost)
-			} else {
+			//if recursive {
+			//	getOUCostRecursive(&OU, org, ce, &time, &cost)
+			//	fmt.Printf("Cost of %s recursively is: %f\n", OUid, cost)
+			//}
+			if !recursive {
 				getOUCost(&OU, org, ce, &time, &cost)
 				fmt.Printf("Cost of %s is: %f\n", OUid, cost)
 			}
