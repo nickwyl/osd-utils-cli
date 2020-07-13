@@ -25,10 +25,8 @@ platforms may be added in the future)`,
 			fmt.Println("This is acccessKeyID:", ops.accessKeyID)
 			//fmt.Println("this is config file: ", ops.configFile)
 
-			//ops.complete(cmd, args)
-			//ops.initAWSClients()
-
-			//ops.initAWSClients()
+			ops.complete(cmd, args)
+			ops.initAWSClients()
 
 		},
 	}
@@ -42,8 +40,8 @@ platforms may be added in the future)`,
 	costCmd.PersistentFlags().StringVarP(&ops.region, "aws-region", "z", common.DefaultRegion, "specify AWS region")
 
 	//costCmd.AddCommand(awsCmd)
-	//costCmd.AddCommand(newCmdGet(streams))
-	costCmd.AddCommand(newCmdReconcile(streams))
+	costCmd.AddCommand(newCmdGet(streams))
+	//costCmd.AddCommand(newCmdReconcile(streams))
 
 	return costCmd
 }
