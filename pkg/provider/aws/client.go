@@ -57,8 +57,10 @@ type Client interface {
 	DetachRolePolicy(*iam.DetachRolePolicyInput) (*iam.DetachRolePolicyOutput, error)
 	ListAttachedRolePolicies(*iam.ListAttachedRolePoliciesInput) (*iam.ListAttachedRolePoliciesOutput, error)
 
-	// Organizations and Cost Explorer
+	// Organizations
 	GetOrg() *organizations.Organizations
+
+	// Cost Explorer
 	GetCE() *costexplorer.CostExplorer
 }
 
