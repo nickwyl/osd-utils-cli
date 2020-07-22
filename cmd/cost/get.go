@@ -40,7 +40,7 @@ func newCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 				fmt.Printf("Cost of %s OU recursively is: %f%s\n", *OU.Name, cost, unit)
 			} else {
 				getOUCost(OU, org, ce, &ops.time, &cost)
-				fmt.Printf("Cost of %s OU is: %f%s\n", ops.ou, cost, unit)
+				fmt.Printf("Cost of %s OU is: %f%s\n", *OU.Name, cost, unit)
 			}
 		},
 	}
