@@ -34,10 +34,10 @@ func newCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 			//Store cost
 			var cost float64 = 0
 
-			if ops.recursive { 	//Get cost of given OU by aggregating costs of all (including immediate) accounts under OU
+			if ops.recursive { //Get cost of given OU by aggregating costs of all (including immediate) accounts under OU
 				getOUCostRecursive(&OU, org, ce, &ops.time, &cost)
 				fmt.Printf("Cost of %s recursively is: %f\n", ops.ou, cost)
-			} else { 			//Get cost of given OU by aggregating costs of only immediate accounts under given OU
+			} else { //Get cost of given OU by aggregating costs of only immediate accounts under given OU
 				getOUCost(&OU, org, ce, &ops.time, &cost)
 				fmt.Printf("Cost of %s is: %f\n", ops.ou, cost)
 			}
@@ -73,7 +73,7 @@ func getAccounts(OU *organizations.OrganizationalUnit, org awsprovider.Organizat
 	//Populate accountSlice with accounts by looping until accounts.NextToken is null
 	for {
 		accounts, err := org.ListAccountsForParent(&organizations.ListAccountsForParentInput{
-			ParentId: OU.Id,
+			ParentId:  OU.Id,
 			NextToken: nextToken,
 		})
 		if err != nil {
@@ -87,7 +87,7 @@ func getAccounts(OU *organizations.OrganizationalUnit, org awsprovider.Organizat
 		if accounts.NextToken == nil {
 			break
 		}
-		nextToken = accounts.NextToken	//If NextToken != nil, keep looping
+		nextToken = accounts.NextToken //If NextToken != nil, keep looping
 	}
 
 	return accountSlice
@@ -117,7 +117,7 @@ func getOUs(OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsC
 	//Populate OUSlice with OUs by looping until OUs.NextToken is null
 	for {
 		OUs, err := org.ListOrganizationalUnitsForParent(&organizations.ListOrganizationalUnitsForParentInput{
-			ParentId: OU.Id,
+			ParentId:  OU.Id,
 			NextToken: nextToken,
 		})
 		if err != nil {
@@ -132,7 +132,7 @@ func getOUs(OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsC
 		if OUs.NextToken == nil {
 			break
 		}
-		nextToken = OUs.NextToken	//If NextToken != nil, keep looping
+		nextToken = OUs.NextToken //If NextToken != nil, keep looping
 	}
 
 	return OUSlice

@@ -59,7 +59,7 @@ func reconciliateCostCategories(OU *organizations.OrganizationalUnit, org awspro
 		if existingCostCategories.NextToken == nil {
 			break
 		}
-		nextToken = existingCostCategories.NextToken	//If NextToken != nil, keep looping
+		nextToken = existingCostCategories.NextToken //If NextToken != nil, keep looping
 	}
 
 	OUs := getOUsRecursive(OU, org)
