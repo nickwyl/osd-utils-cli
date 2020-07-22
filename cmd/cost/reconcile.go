@@ -37,14 +37,16 @@ func newCmdReconcile(streams genericclioptions.IOStreams) *cobra.Command {
 //Checks if there's a cost category for every OU. If not, creates the missing cost category. This should be ran every 24 hours.
 func reconciliateCostCategories(OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient) {
 	costCategoryCreated := false
-
-	OUs := getOUsRecursive(OU, org)
 	costCategoriesSet := mapset.NewSet()
 
-	existingCostCategories, err := ce.ListCostCategoryDefinitions(&costexplorer.ListCostCategoryDefinitionsInput{})
+	var nextToken *string
 
 	//Populate costCategoriesSet with cost categories by looping until existingCostCategories.NextToken is null
 	for {
+		existingCostCategories, err := ce.ListCostCategoryDefinitions(&costexplorer.ListCostCategoryDefinitionsInput{
+			NextToken: nextToken,
+		})
+
 		if err != nil {
 			log.Fatalln("Error listing cost categories:", err)
 		}
@@ -57,11 +59,10 @@ func reconciliateCostCategories(OU *organizations.OrganizationalUnit, org awspro
 		if existingCostCategories.NextToken == nil {
 			break
 		}
-
-		//Get accounts
-		existingCostCategories, err = ce.ListCostCategoryDefinitions(&costexplorer.ListCostCategoryDefinitionsInput{})
+		nextToken = existingCostCategories.NextToken	//If NextToken != nil, keep looping
 	}
 
+	OUs := getOUsRecursive(OU, org)
 	//Loop through every OU under OpenShift and create cost category if missing
 	for _, OU := range OUs {
 		if !costCategoriesSet.Contains(*OU.Id) {

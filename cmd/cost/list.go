@@ -45,6 +45,7 @@ func newCmdList(streams genericclioptions.IOStreams) *cobra.Command {
 	return listCmd
 }
 
+//List the cost of each OU under given OU
 func listCostsUnderOU(OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient, timePtr *string) {
 	OUs := getOUsRecursive(OU, org)
 
