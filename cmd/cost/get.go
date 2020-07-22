@@ -34,10 +34,10 @@ func newCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 			//Store cost
 			var cost float64 = 0
 
-			if ops.recursive {
+			if ops.recursive { 	//Get cost of given OU by aggregating costs of all (including immediate) accounts under OU
 				getOUCostRecursive(&OU, org, ce, &ops.time, &cost)
 				fmt.Printf("Cost of %s recursively is: %f\n", ops.ou, cost)
-			} else {
+			} else { 			//Get cost of given OU by aggregating costs of only immediate accounts under given OU
 				getOUCost(&OU, org, ce, &ops.time, &cost)
 				fmt.Printf("Cost of %s is: %f\n", ops.ou, cost)
 			}
@@ -218,7 +218,7 @@ func getAccountCost(accountID *string, ce awsprovider.CostExplorerClient, timePt
 	}
 }
 
-//Get cost of given OU by aggregating costs of immediate accounts under given OU
+//Get cost of given OU by aggregating costs of only immediate accounts under given OU
 func getOUCost(OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient, timePtr *string, cost *float64) {
 	//Populate accounts
 	accounts := getAccounts(OU, org)
@@ -229,7 +229,7 @@ func getOUCost(OU *organizations.OrganizationalUnit, org awsprovider.Organizatio
 	}
 }
 
-//Get cost of all (not only immediate) accounts under OU
+//Get cost of given OU by aggregating costs of all (including immediate) accounts under OU
 func getOUCostRecursive(OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient, timePtr *string, cost *float64) {
 	//Populate OUs
 	OUs := getOUs(OU, org)

@@ -49,12 +49,12 @@ func newCmdCreate(streams genericclioptions.IOStreams) *cobra.Command {
 //Store flag options for get command
 type createOptions struct {
 	ou string
-
 	genericclioptions.IOStreams
 }
 
-//Create Cost Category for OU given as argument for -ccc flag
+//Create Cost Category for OU given as argument for -ou flag
 func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient) {
+	//Gets all (not only immediate) accounts under the given OU
 	accounts := getAccountsRecursive(OU, org)
 
 	_, err := ce.CreateCostCategoryDefinition(&costexplorer.CreateCostCategoryDefinitionInput{
@@ -73,7 +73,7 @@ func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org 
 		},
 	})
 	if err != nil {
-		log.Fatalln("Error creating cost category:", err)
+		log.Fatalf("Error creating cost category for %s: %v", *OUid, err)
 	}
 
 	fmt.Println("Created Cost Category for", *OUid)

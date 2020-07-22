@@ -58,6 +58,7 @@ func newCostOptions(streams genericclioptions.IOStreams) *costOptions {
 	}
 }
 
+//Initiate AWS clients for Organizations and Cost Explorer services using, if given, credentials in flags, else, credentials in the environment
 func (opsCost *costOptions) initAWSClients() (awsprovider.OrganizationsClient, awsprovider.CostExplorerClient, error) {
 	//Initialize AWS clients
 	var (
@@ -82,6 +83,7 @@ func (opsCost *costOptions) initAWSClients() (awsprovider.OrganizationsClient, a
 	return awsClient.GetOrg(), awsClient.GetCE(), err
 }
 
+//Initializes costOptions struct
 func (opsCost *costOptions) complete(cmd *cobra.Command, _ []string) error {
 	if opsCost.accessKeyID == "" && opsCost.secretAccessKey == "" {
 		fmt.Fprintln(opsCost.Out, "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not provided, reading credentials from config file or env vars.")
