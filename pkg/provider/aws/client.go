@@ -81,6 +81,10 @@ type CostExplorerClient interface {
 	ListCostCategoryDefinitions(input *costexplorer.ListCostCategoryDefinitionsInput) (*costexplorer.ListCostCategoryDefinitionsOutput, error)
 }
 
+type OrganizationalUnitClient interface {
+	DescribeOrganizationalUnit(input *organizations.DescribeOrganizationalUnitInput) (*organizations.DescribeOrganizationalUnitOutput, error)
+}
+
 // NewAwsClient creates an AWS client with credentials in the environment
 func NewAwsClient(profile, region, configFile string) (Client, error) {
 	opt := session.Options{

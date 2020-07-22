@@ -29,17 +29,18 @@ func newCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 			org, ce, err := opsCost.initAWSClients()
 			cmdutil.CheckErr(err)
 
-			//Get Organizational Unit
-			OU := organizations.OrganizationalUnit{Id: aws.String(ops.ou)}
+			OU := getOU(org, ops.ou)
+
 			//Store cost
 			var cost float64 = 0
+			var unit string
 
 			if ops.recursive {
-				getOUCostRecursive(&OU, org, ce, &ops.time, &cost)
-				fmt.Printf("Cost of %s recursively is: %f\n", ops.ou, cost)
+				getOUCostRecursive(OU, org, ce, &ops.time, &cost)
+				fmt.Printf("Cost of %s OU recursively is: %f%s\n", *OU.Name, cost, unit)
 			} else {
-				getOUCost(&OU, org, ce, &ops.time, &cost)
-				fmt.Printf("Cost of %s is: %f\n", ops.ou, cost)
+				getOUCost(OU, org, ce, &ops.time, &cost)
+				fmt.Printf("Cost of %s OU is: %f%s\n", ops.ou, cost, unit)
 			}
 		},
 	}
