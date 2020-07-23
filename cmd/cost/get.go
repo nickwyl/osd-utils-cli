@@ -111,7 +111,6 @@ func getAccountsRecursive(OU *organizations.OrganizationalUnit, org awsprovider.
 		accountsIDs = append(accountsIDs, getAccountsRecursive(childOU, org)...)
 	}
 
-	//*accountsIDs = append(*accountsIDs, getAccounts(OU, org)...)
 	return append(accountsIDs, getAccounts(OU, org)...)
 }
 
