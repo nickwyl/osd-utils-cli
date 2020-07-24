@@ -5,7 +5,9 @@ package aws
 
 import (
 	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/aws/aws-sdk-go/service/costexplorer/costexploreriface"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/organizations/organizationsiface"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,16 +60,18 @@ type Client interface {
 	ListAttachedRolePolicies(*iam.ListAttachedRolePoliciesInput) (*iam.ListAttachedRolePoliciesOutput, error)
 
 	// Organizations and Cost Explorer
-	GetOrg() *organizations.Organizations
-	GetCE() *costexplorer.CostExplorer
+	GetOrg() organizationsiface.OrganizationsAPI
+	GetCE() costexploreriface.CostExplorerAPI
 }
 
 type AwsClient struct {
 	iamClient iamiface.IAMAPI
 	stsClient stsiface.STSAPI
 	s3Client  s3iface.S3API
-	orgClient *organizations.Organizations
-	ceClient  *costexplorer.CostExplorer
+	//orgClient *organizations.Organizations
+	//ceClient  *costexplorer.CostExplorer
+	orgClient organizationsiface.OrganizationsAPI
+	ceClient  costexploreriface.CostExplorerAPI
 }
 
 type OrganizationsClient interface {
@@ -217,10 +221,10 @@ func (c *AwsClient) ListAttachedRolePolicies(input *iam.ListAttachedRolePolicies
 	return c.iamClient.ListAttachedRolePolicies(input)
 }
 
-func (c *AwsClient) GetOrg() *organizations.Organizations {
+func (c *AwsClient) GetOrg() organizationsiface.OrganizationsAPI {
 	return c.orgClient
 }
 
-func (c *AwsClient) GetCE() *costexplorer.CostExplorer {
+func (c *AwsClient) GetCE() costexploreriface.CostExplorerAPI {
 	return c.ceClient
 }
