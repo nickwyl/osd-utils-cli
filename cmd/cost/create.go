@@ -54,7 +54,7 @@ type createOptions struct {
 }
 
 //Create Cost Category for OU given as argument for -ccc flag
-func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient) {
+func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient) error {
 	accounts := getAccountsRecursive(OU, org)
 
 	_, err := ce.CreateCostCategoryDefinition(&costexplorer.CreateCostCategoryDefinitionInput{
@@ -73,8 +73,10 @@ func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org 
 		},
 	})
 	if err != nil {
-		log.Fatalln("Error creating cost category:", err)
+		return err
 	}
 
 	fmt.Println("Created Cost Category for", *OUid)
+
+	return nil
 }
