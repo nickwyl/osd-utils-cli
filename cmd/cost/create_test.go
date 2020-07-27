@@ -4,40 +4,53 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/gomega"
-	awsosd "github.com/openshift/osd-utils-cli/pkg/provider/aws"
 	"github.com/openshift/osd-utils-cli/pkg/provider/aws/mock"
 	"testing"
 )
 
 type mockSuite struct {
 	mockCtrl      *gomock.Controller
-	mockAWSClient *mock.MockCostExplorerClient
+	mockOrgClient *mock.MockOrganizationsClient
+	mockCEClient  *mock.MockCostExplorerClient
 }
 
-//setupCostExplorerMocks is an easy way to setup all of the default mocks
-func setupCostExplorerMocks(t *testing.T) *mockSuite {
+func setupAWSMocks(t *testing.T) *mockSuite {
 	mocks := &mockSuite{
 		mockCtrl: gomock.NewController(t),
 	}
 
-	mocks.mockAWSClient = mock.NewMockCostExplorerClient(mocks.mockCtrl)
+	mocks.mockOrgClient = mock.NewMockOrganizationsClient(mocks.mockCtrl)
+	mocks.mockCEClient = mock.NewMockCostExplorerClient(mocks.mockCtrl)
+
 	return mocks
 }
+
+//func setupCEMocks(t *testing.T) *mockSuite {
+//	mocks := &mockSuite{
+//		mockCtrl: gomock.NewController(t),
+//	}
+//
+//	mocks.mockCEClient = mock.NewMockCostExplorerClient(mocks.mockCtrl)
+//	return mocks
+//}
 
 func TestCreateCostCategory(t *testing.T) {
 	g := NewGomegaWithT(t)
 	testCases := []struct {
 		title	     string
-		OUid         string
-		setupAWSMock func(r *mock.MockCostExplorerClientMockRecorder)
+		OUid         *string
+		OU           *organizations.OrganizationalUnit
+		setupCEMock  func(r *mock.MockCostExplorerClientMockRecorder)
 		errExpected  bool
 	}{
 		{
 			title: "Error calling CreateCostCategoryDefinition API",
-			setupAWSMock: func (r *mock.MockCostExplorerClientMockRecorder) {
+			OUid: aws.String("ou-0wd6-oq5d7v8g"),
+			OU: &organizations.OrganizationalUnit{Id: aws.String("ou-0wd6-oq5d7v8g")},
+			setupCEMock: func(r *mock.MockCostExplorerClientMockRecorder) {
 				r.CreateCostCategoryDefinition(gomock.Any()).
 					Return(nil, errors.New("FakeError")).Times(1)
 			},
@@ -45,8 +58,8 @@ func TestCreateCostCategory(t *testing.T) {
 		},
 		{
 			title: "Cost category already exists",
-			OUid: "ou-0wd6-oq5d7v8g",
-			setupAWSMock: func (r *mock.MockCostExplorerClientMockRecorder) {
+			OUid: aws.String("ou-0wd6-oq5d7v8g"),
+			setupCEMock: func(r *mock.MockCostExplorerClientMockRecorder) {
 				r.CreateCostCategoryDefinition(gomock.Any()).
 					Return(nil, awserr.New(
 						"ValidationException",
@@ -60,20 +73,19 @@ func TestCreateCostCategory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.title, func(t *testing.T) {
-			mocks := setupCostExplorerMocks(t)
-			tc.setupAWSMock(mocks.mockAWSClient.EXPECT())
+			mocks := setupAWSMocks(t)
 
 			// This is necessary for the mocks to report failures like methods not being called an expected number of times.
 			// after mocks is defined
 			defer mocks.mockCtrl.Finish()
 
 			//exists, err := costexplorer.CostExplorer.CreateCostCategoryDefinition()
-			err := createCostCategory()
+			err := createCostCategory(tc.OUid, tc.OU, mocks.mockOrgClient, mocks.mockCEClient)
 
 			if tc.errExpected {
 				g.Expect(err).Should(HaveOccurred())
 			} else {
-				g.Expect(exists).Should(Equal(tc.exists))
+				g.Expect(err).ShouldNot(HaveOccurred())
 			}
 		})
 	}
