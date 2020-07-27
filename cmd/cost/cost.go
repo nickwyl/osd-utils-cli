@@ -3,7 +3,6 @@ package cost
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/openshift/osd-utils-cli/cmd/common"
 	awsprovider "github.com/openshift/osd-utils-cli/pkg/provider/aws"
@@ -95,7 +94,7 @@ func (opsCost *costOptions) initAWSClients() (awsprovider.OrganizationsClient, a
 	return awsClient.GetOrg(), awsClient.GetCE(), err
 }
 
-func getOU(OU awsprovider.OrganizationalUnitClient, OUid string) *organizations.OrganizationalUnit {
+func getOU(OU awsprovider.OrganizationsClient, OUid string) *organizations.OrganizationalUnit {
 	result, err := OU.DescribeOrganizationalUnit(&organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(OUid),
 	})
