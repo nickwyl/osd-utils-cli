@@ -95,8 +95,8 @@ func (opsCost *costOptions) initAWSClients() (*organizations.Organizations, *cos
 	return awsClient.GetOrg(), awsClient.GetCE(), err
 }
 
-func getOU(org awsprovider.OrganizationalUnitClient, OUid string) *organizations.OrganizationalUnit {
-	result, err := org.DescribeOrganizationalUnit(&organizations.DescribeOrganizationalUnitInput{
+func getOU(OU awsprovider.OrganizationalUnitClient, OUid string) *organizations.OrganizationalUnit {
+	result, err := OU.DescribeOrganizationalUnit(&organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(OUid),
 	})
 	if err != nil {
