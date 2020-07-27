@@ -71,7 +71,7 @@ func (opsCost *costOptions) complete(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (opsCost *costOptions) initAWSClients() (*organizations.Organizations, *costexplorer.CostExplorer, error) {
+func (opsCost *costOptions) initAWSClients() (awsprovider.OrganizationsClient, awsprovider.CostExplorerClient, error) {
 	//Initialize AWS clients
 	var (
 		awsClient awsprovider.Client
