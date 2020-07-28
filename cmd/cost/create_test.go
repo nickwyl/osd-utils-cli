@@ -28,21 +28,13 @@ func setupAWSMocks(t *testing.T) *mockSuite {
 	return mocks
 }
 
-//func setupCEMocks(t *testing.T) *mockSuite {
-//	mocks := &mockSuite{
-//		mockCtrl: gomock.NewController(t),
-//	}
-//
-//	mocks.mockCEClient = mock.NewMockCostExplorerClient(mocks.mockCtrl)
-//	return mocks
-//}
-
 func TestCreateCostCategory(t *testing.T) {
 	g := NewGomegaWithT(t)
 	testCases := []struct {
 		title	     string
 		OUid         *string
 		OU           *organizations.OrganizationalUnit
+		setupOrgMock func (r *mock.MockOrganizationsClientMockRecorder)
 		setupCEMock  func(r *mock.MockCostExplorerClientMockRecorder)
 		errExpected  bool
 	}{
@@ -50,6 +42,10 @@ func TestCreateCostCategory(t *testing.T) {
 			title: "Error calling CreateCostCategoryDefinition API",
 			OUid: aws.String("ou-0wd6-oq5d7v8g"),
 			OU: &organizations.OrganizationalUnit{Id: aws.String("ou-0wd6-oq5d7v8g")},
+			setupOrgMock: func(d *mock.MockOrganizationsClientMockRecorder) {
+				d.ListOrganizationalUnitsForParent(gomock.Any()).
+					Return(nil).Times(1)
+			},
 			setupCEMock: func(r *mock.MockCostExplorerClientMockRecorder) {
 				r.CreateCostCategoryDefinition(gomock.Any()).
 					Return(nil, errors.New("FakeError")).Times(1)
@@ -59,6 +55,11 @@ func TestCreateCostCategory(t *testing.T) {
 		{
 			title: "Cost category already exists",
 			OUid: aws.String("ou-0wd6-oq5d7v8g"),
+			OU: &organizations.OrganizationalUnit{Id: aws.String("ou-0wd6-oq5d7v8g")},
+			setupOrgMock: func(r *mock.MockOrganizationsClientMockRecorder) {
+				r.ListOrganizationalUnitsForParent(gomock.Any()).
+					Return(nil).Times(1)
+			},
 			setupCEMock: func(r *mock.MockCostExplorerClientMockRecorder) {
 				r.CreateCostCategoryDefinition(gomock.Any()).
 					Return(nil, awserr.New(
@@ -79,7 +80,7 @@ func TestCreateCostCategory(t *testing.T) {
 			// after mocks is defined
 			defer mocks.mockCtrl.Finish()
 
-			//exists, err := costexplorer.CostExplorer.CreateCostCategoryDefinition()
+			//OU := &organizations.OrganizationalUnit{Id: aws.String("ou-0wd6-oq5d7v8g")}
 			err := createCostCategory(tc.OUid, tc.OU, mocks.mockOrgClient, mocks.mockCEClient)
 
 			if tc.errExpected {

@@ -6,8 +6,10 @@ package mock
 
 import (
 	costexplorer "github.com/aws/aws-sdk-go/service/costexplorer"
+	costexploreriface "github.com/aws/aws-sdk-go/service/costexplorer/costexploreriface"
 	iam "github.com/aws/aws-sdk-go/service/iam"
 	organizations "github.com/aws/aws-sdk-go/service/organizations"
+	organizationsiface "github.com/aws/aws-sdk-go/service/organizations/organizationsiface"
 	s3 "github.com/aws/aws-sdk-go/service/s3"
 	sts "github.com/aws/aws-sdk-go/service/sts"
 	gomock "github.com/golang/mock/gomock"
@@ -323,10 +325,10 @@ func (mr *MockClientMockRecorder) ListAttachedRolePolicies(arg0 interface{}) *go
 }
 
 // GetOrg mocks base method.
-func (m *MockClient) GetOrg() *organizations.Organizations {
+func (m *MockClient) GetOrg() organizationsiface.OrganizationsAPI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrg")
-	ret0, _ := ret[0].(*organizations.Organizations)
+	ret0, _ := ret[0].(organizationsiface.OrganizationsAPI)
 	return ret0
 }
 
@@ -337,10 +339,10 @@ func (mr *MockClientMockRecorder) GetOrg() *gomock.Call {
 }
 
 // GetCE mocks base method.
-func (m *MockClient) GetCE() *costexplorer.CostExplorer {
+func (m *MockClient) GetCE() costexploreriface.CostExplorerAPI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCE")
-	ret0, _ := ret[0].(*costexplorer.CostExplorer)
+	ret0, _ := ret[0].(costexploreriface.CostExplorerAPI)
 	return ret0
 }
 
@@ -401,6 +403,21 @@ func (m *MockOrganizationsClient) ListOrganizationalUnitsForParent(input *organi
 func (mr *MockOrganizationsClientMockRecorder) ListOrganizationalUnitsForParent(input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOrganizationalUnitsForParent", reflect.TypeOf((*MockOrganizationsClient)(nil).ListOrganizationalUnitsForParent), input)
+}
+
+// DescribeOrganizationalUnit mocks base method.
+func (m *MockOrganizationsClient) DescribeOrganizationalUnit(input *organizations.DescribeOrganizationalUnitInput) (*organizations.DescribeOrganizationalUnitOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DescribeOrganizationalUnit", input)
+	ret0, _ := ret[0].(*organizations.DescribeOrganizationalUnitOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DescribeOrganizationalUnit indicates an expected call of DescribeOrganizationalUnit.
+func (mr *MockOrganizationsClientMockRecorder) DescribeOrganizationalUnit(input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeOrganizationalUnit", reflect.TypeOf((*MockOrganizationsClient)(nil).DescribeOrganizationalUnit), input)
 }
 
 // MockCostExplorerClient is a mock of CostExplorerClient interface.
