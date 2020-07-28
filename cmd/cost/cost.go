@@ -2,12 +2,14 @@ package cost
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
+	"log"
+
 	"github.com/openshift/osd-utils-cli/cmd/common"
 	awsprovider "github.com/openshift/osd-utils-cli/pkg/provider/aws"
-	"github.com/spf13/cobra"
+
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"log"
 )
 
 // costCmd represents the cost command
@@ -19,6 +21,7 @@ func NewCmdCost(streams genericclioptions.IOStreams) *cobra.Command {
 		Long: `The cost command allows for cost management on the AWS platform (other 
 platforms may be added in the future)`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			cmdutil.CheckErr(opsCost.complete(cmd, args))
 		},
 	}
 
@@ -59,13 +62,12 @@ func newCostOptions(streams genericclioptions.IOStreams) *costOptions {
 }
 
 //Initiate AWS clients for Organizations and Cost Explorer services using, if given, credentials in flags, else, credentials in the environment
-func (opsCost *costOptions) initAWSClients() (awsprovider.OrganizationsClient, awsprovider.CostExplorerClient, error) {
+func (opsCost *costOptions) initAWSClients() (awsprovider.Client, error) {
 	//Initialize AWS clients
 	var (
 		awsClient awsprovider.Client
 		err       error
 	)
-
 	if opsCost.accessKeyID == "" && opsCost.secretAccessKey == "" {
 		awsClient, err = awsprovider.NewAwsClient(opsCost.profile, opsCost.region, opsCost.configFile)
 	} else {
@@ -77,10 +79,10 @@ func (opsCost *costOptions) initAWSClients() (awsprovider.OrganizationsClient, a
 	}
 
 	if err != nil {
-		log.Fatalln("Error getting AWS clients:", err)
+		log.Fatalln("Error initializing AWS clients:", err)
 	}
 
-	return awsClient.GetOrg(), awsClient.GetCE(), err
+	return awsClient, err
 }
 
 //Initializes costOptions struct

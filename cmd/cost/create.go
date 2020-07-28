@@ -21,8 +21,7 @@ func newCmdCreate(streams genericclioptions.IOStreams) *cobra.Command {
 		Short: "Create a cost category for the given OU",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			cmdutil.CheckErr(opsCost.complete(cmd, args))
-			org, ce, err := opsCost.initAWSClients()
+			awsClient, err := opsCost.initAWSClients()
 			cmdutil.CheckErr(err)
 
 			//OU Flag
@@ -34,7 +33,9 @@ func newCmdCreate(streams genericclioptions.IOStreams) *cobra.Command {
 			//Get Organizational Unit
 			OU := organizations.OrganizationalUnit{Id: aws.String(OUid)}
 
-			createCostCategory(&OUid, &OU, org, ce)
+			if err := createCostCategory(&OUid, &OU, awsClient); err != nil {
+				log.Fatalf("Error creating cost category for %s: %v", OUid, err)
+			}
 		},
 	}
 	createCmd.Flags().String("ou", "", "get OU ID")
@@ -46,18 +47,21 @@ func newCmdCreate(streams genericclioptions.IOStreams) *cobra.Command {
 	return createCmd
 }
 
-//Store flag options for get command
+//Store flag options for create command
 type createOptions struct {
 	ou string
 	genericclioptions.IOStreams
 }
 
 //Create Cost Category for OU given as argument for -ou flag
-func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient) {
+func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, awsClient awsprovider.Client) error {
 	//Gets all (not only immediate) accounts under the given OU
-	accounts := getAccountsRecursive(OU, org)
+	accounts, err := getAccountsRecursive(OU, awsClient)
+	if err != nil {
+		return err
+	}
 
-	_, err := ce.CreateCostCategoryDefinition(&costexplorer.CreateCostCategoryDefinitionInput{
+	_, err = awsClient.CreateCostCategoryDefinition(&costexplorer.CreateCostCategoryDefinitionInput{
 		Name:        OUid,
 		RuleVersion: aws.String("CostCategoryExpression.v1"),
 		Rules: []*costexplorer.CostCategoryRule{
@@ -73,8 +77,10 @@ func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org 
 		},
 	})
 	if err != nil {
-		log.Fatalf("Error creating cost category for %s: %v", *OUid, err)
+		return err
 	}
 
 	fmt.Println("Created Cost Category for", *OUid)
+
+	return nil
 }

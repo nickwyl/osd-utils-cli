@@ -13,8 +13,8 @@ osdctl cost list [flags]
 ### Options
 
 ```
-      --cc string     get name of Cost Category (default is name of v4's OU) (default "ou-0wd6-aff5ji37")
   -h, --help          help for list
+      --ou string     get name of OU (default is name of v4's OU) (default "ou-0wd6-aff5ji37")
   -t, --time string   set time
 ```
 

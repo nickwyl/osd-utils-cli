@@ -5,7 +5,9 @@ package aws
 
 import (
 	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/aws/aws-sdk-go/service/costexplorer/costexploreriface"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/organizations/organizationsiface"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,29 +60,21 @@ type Client interface {
 	ListAttachedRolePolicies(*iam.ListAttachedRolePoliciesInput) (*iam.ListAttachedRolePoliciesOutput, error)
 
 	// Organizations
-	GetOrg() *organizations.Organizations
+	ListAccountsForParent(input *organizations.ListAccountsForParentInput) (*organizations.ListAccountsForParentOutput, error)
+	ListOrganizationalUnitsForParent(input *organizations.ListOrganizationalUnitsForParentInput) (*organizations.ListOrganizationalUnitsForParentOutput, error)
 
 	// Cost Explorer
-	GetCE() *costexplorer.CostExplorer
+	GetCostAndUsage(input *costexplorer.GetCostAndUsageInput) (*costexplorer.GetCostAndUsageOutput, error)
+	CreateCostCategoryDefinition(input *costexplorer.CreateCostCategoryDefinitionInput) (*costexplorer.CreateCostCategoryDefinitionOutput, error)
+	ListCostCategoryDefinitions(input *costexplorer.ListCostCategoryDefinitionsInput) (*costexplorer.ListCostCategoryDefinitionsOutput, error)
 }
 
 type AwsClient struct {
 	iamClient iamiface.IAMAPI
 	stsClient stsiface.STSAPI
 	s3Client  s3iface.S3API
-	orgClient *organizations.Organizations
-	ceClient  *costexplorer.CostExplorer
-}
-
-type OrganizationsClient interface {
-	ListAccountsForParent(input *organizations.ListAccountsForParentInput) (*organizations.ListAccountsForParentOutput, error)
-	ListOrganizationalUnitsForParent(input *organizations.ListOrganizationalUnitsForParentInput) (*organizations.ListOrganizationalUnitsForParentOutput, error)
-}
-
-type CostExplorerClient interface {
-	GetCostAndUsage(input *costexplorer.GetCostAndUsageInput) (*costexplorer.GetCostAndUsageOutput, error)
-	CreateCostCategoryDefinition(input *costexplorer.CreateCostCategoryDefinitionInput) (*costexplorer.CreateCostCategoryDefinitionOutput, error)
-	ListCostCategoryDefinitions(input *costexplorer.ListCostCategoryDefinitionsInput) (*costexplorer.ListCostCategoryDefinitionsOutput, error)
+	orgClient organizationsiface.OrganizationsAPI
+	ceClient  costexploreriface.CostExplorerAPI
 }
 
 // NewAwsClient creates an AWS client with credentials in the environment
@@ -219,10 +213,22 @@ func (c *AwsClient) ListAttachedRolePolicies(input *iam.ListAttachedRolePolicies
 	return c.iamClient.ListAttachedRolePolicies(input)
 }
 
-func (c *AwsClient) GetOrg() *organizations.Organizations {
-	return c.orgClient
+func (c *AwsClient) ListAccountsForParent(input *organizations.ListAccountsForParentInput) (*organizations.ListAccountsForParentOutput, error) {
+	return c.orgClient.ListAccountsForParent(input)
 }
 
-func (c *AwsClient) GetCE() *costexplorer.CostExplorer {
-	return c.ceClient
+func (c *AwsClient) ListOrganizationalUnitsForParent(input *organizations.ListOrganizationalUnitsForParentInput) (*organizations.ListOrganizationalUnitsForParentOutput, error) {
+	return c.orgClient.ListOrganizationalUnitsForParent(input)
+}
+
+func (c *AwsClient) GetCostAndUsage(input *costexplorer.GetCostAndUsageInput) (*costexplorer.GetCostAndUsageOutput, error) {
+	return c.ceClient.GetCostAndUsage(input)
+}
+
+func (c *AwsClient) CreateCostCategoryDefinition(input *costexplorer.CreateCostCategoryDefinitionInput) (*costexplorer.CreateCostCategoryDefinitionOutput, error) {
+	return c.ceClient.CreateCostCategoryDefinition(input)
+}
+
+func (c *AwsClient) ListCostCategoryDefinitions(input *costexplorer.ListCostCategoryDefinitionsInput) (*costexplorer.ListCostCategoryDefinitionsOutput, error) {
+	return c.ceClient.ListCostCategoryDefinitions(input)
 }
