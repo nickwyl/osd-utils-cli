@@ -59,31 +59,23 @@ type Client interface {
 	DetachRolePolicy(*iam.DetachRolePolicyInput) (*iam.DetachRolePolicyOutput, error)
 	ListAttachedRolePolicies(*iam.ListAttachedRolePoliciesInput) (*iam.ListAttachedRolePoliciesOutput, error)
 
-	// Organizations and Cost Explorer
-	GetOrg() organizationsiface.OrganizationsAPI
-	GetCE() costexploreriface.CostExplorerAPI
+	// Organizations
+	ListAccountsForParent(input *organizations.ListAccountsForParentInput) (*organizations.ListAccountsForParentOutput, error)
+	ListOrganizationalUnitsForParent(input *organizations.ListOrganizationalUnitsForParentInput) (*organizations.ListOrganizationalUnitsForParentOutput, error)
+	DescribeOrganizationalUnit(input *organizations.DescribeOrganizationalUnitInput) (*organizations.DescribeOrganizationalUnitOutput, error)
+
+	// Cost Explorer
+	GetCostAndUsage(input *costexplorer.GetCostAndUsageInput) (*costexplorer.GetCostAndUsageOutput, error)
+	CreateCostCategoryDefinition(input *costexplorer.CreateCostCategoryDefinitionInput) (*costexplorer.CreateCostCategoryDefinitionOutput, error)
+	ListCostCategoryDefinitions(input *costexplorer.ListCostCategoryDefinitionsInput) (*costexplorer.ListCostCategoryDefinitionsOutput, error)
 }
 
 type AwsClient struct {
 	iamClient iamiface.IAMAPI
 	stsClient stsiface.STSAPI
 	s3Client  s3iface.S3API
-	//orgClient *organizations.Organizations
-	//ceClient  *costexplorer.CostExplorer
 	orgClient organizationsiface.OrganizationsAPI
 	ceClient  costexploreriface.CostExplorerAPI
-}
-
-type OrganizationsClient interface {
-	ListAccountsForParent(input *organizations.ListAccountsForParentInput) (*organizations.ListAccountsForParentOutput, error)
-	ListOrganizationalUnitsForParent(input *organizations.ListOrganizationalUnitsForParentInput) (*organizations.ListOrganizationalUnitsForParentOutput, error)
-	DescribeOrganizationalUnit(input *organizations.DescribeOrganizationalUnitInput) (*organizations.DescribeOrganizationalUnitOutput, error)
-}
-
-type CostExplorerClient interface {
-	GetCostAndUsage(input *costexplorer.GetCostAndUsageInput) (*costexplorer.GetCostAndUsageOutput, error)
-	CreateCostCategoryDefinition(input *costexplorer.CreateCostCategoryDefinitionInput) (*costexplorer.CreateCostCategoryDefinitionOutput, error)
-	ListCostCategoryDefinitions(input *costexplorer.ListCostCategoryDefinitionsInput) (*costexplorer.ListCostCategoryDefinitionsOutput, error)
 }
 
 // NewAwsClient creates an AWS client with credentials in the environment
@@ -222,10 +214,26 @@ func (c *AwsClient) ListAttachedRolePolicies(input *iam.ListAttachedRolePolicies
 	return c.iamClient.ListAttachedRolePolicies(input)
 }
 
-func (c *AwsClient) GetOrg() organizationsiface.OrganizationsAPI {
-	return c.orgClient
+func (c *AwsClient) ListAccountsForParent(input *organizations.ListAccountsForParentInput) (*organizations.ListAccountsForParentOutput, error) {
+	return c.orgClient.ListAccountsForParent(input)
 }
 
-func (c *AwsClient) GetCE() costexploreriface.CostExplorerAPI {
-	return c.ceClient
+func (c *AwsClient) ListOrganizationalUnitsForParent(input *organizations.ListOrganizationalUnitsForParentInput) (*organizations.ListOrganizationalUnitsForParentOutput, error) {
+	return c.orgClient.ListOrganizationalUnitsForParent(input)
+}
+
+func (c *AwsClient) DescribeOrganizationalUnit(input *organizations.DescribeOrganizationalUnitInput) (*organizations.DescribeOrganizationalUnitOutput, error) {
+	return c.orgClient.DescribeOrganizationalUnit(input)
+}
+
+func (c *AwsClient) GetCostAndUsage(input *costexplorer.GetCostAndUsageInput) (*costexplorer.GetCostAndUsageOutput, error) {
+	return c.ceClient.GetCostAndUsage(input)
+}
+
+func (c *AwsClient) CreateCostCategoryDefinition(input *costexplorer.CreateCostCategoryDefinitionInput) (*costexplorer.CreateCostCategoryDefinitionOutput, error) {
+	return c.ceClient.CreateCostCategoryDefinition(input)
+}
+
+func (c *AwsClient) ListCostCategoryDefinitions(input *costexplorer.ListCostCategoryDefinitionsInput) (*costexplorer.ListCostCategoryDefinitionsOutput, error) {
+	return c.ceClient.ListCostCategoryDefinitions(input)
 }

@@ -21,8 +21,7 @@ func newCmdCreate(streams genericclioptions.IOStreams) *cobra.Command {
 		Short: "Create a cost category for the given OU",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			cmdutil.CheckErr(opsCost.complete(cmd, args))
-			org, ce, err := opsCost.initAWSClients()
+			awsClient, err := opsCost.initAWSClients()
 			cmdutil.CheckErr(err)
 
 			//OU Flag
@@ -31,10 +30,10 @@ func newCmdCreate(streams genericclioptions.IOStreams) *cobra.Command {
 				log.Fatalln("OU flag:", err)
 			}
 
-			OU := getOU(org, OUid)
+			OU := getOU(awsClient, OUid)
 
-			if err := createCostCategory(&OUid, OU, org, ce); err != nil {
-				 log.Fatalln("Error creating cost category:", err)
+			if err := createCostCategory(&OUid, OU, awsClient); err != nil {
+				log.Fatalf("Error creating cost category for %s: %v", OUid, err)
 			}
 		},
 	}
@@ -50,15 +49,18 @@ func newCmdCreate(streams genericclioptions.IOStreams) *cobra.Command {
 //Store flag options for create command
 type createOptions struct {
 	ou string
-
 	genericclioptions.IOStreams
 }
 
 //Create Cost Category for OU given as argument for -ou flag
-func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, org awsprovider.OrganizationsClient, ce awsprovider.CostExplorerClient) error {
-	accounts := getAccountsRecursive(OU, org)
+func createCostCategory(OUid *string, OU *organizations.OrganizationalUnit, awsClient awsprovider.Client) error {
+	//Gets all (not only immediate) accounts under the given OU
+	accounts, err := getAccountsRecursive(OU, awsClient)
+	if err != nil {
+		return err
+	}
 
-	_, err := ce.CreateCostCategoryDefinition(&costexplorer.CreateCostCategoryDefinitionInput{
+	_, err = awsClient.CreateCostCategoryDefinition(&costexplorer.CreateCostCategoryDefinitionInput{
 		Name:        OUid,
 		RuleVersion: aws.String("CostCategoryExpression.v1"),
 		Rules: []*costexplorer.CostCategoryRule{
