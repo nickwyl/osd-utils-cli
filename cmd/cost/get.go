@@ -187,10 +187,22 @@ func getAccountCost(accountID *string, awsClient awsprovider.Client, timePtr *st
 	switch *timePtr {
 	case "MTD":
 		start = time.Now().Format("2006-01") + "-01"
-		end = time.Now().Format("2006-01-02")
+		//end = time.Now().Format("2006-01-02")
 	case "YTD":
 		start = time.Now().Format("2006") + "-01-01"
-		end = time.Now().Format("2006-01-02")
+		//end = time.Now().Format("2006-01-02")
+	case "3M":
+
+		if month, _ := strconv.Atoi(time.Now().Format("01")); month > 3 {
+			start = time.Now().Format("2006-") + strconv.Itoa(month - 3) + time.Now().Format("-02")
+		} else {
+			strconv.Itoa(month + 9)
+		}
+
+	case "6M":
+		start =
+	case "1Y":
+		start = strconv.Itoa(time.Now().Year()-1) + time.Now().Format("-01-02")
 	case "TestError":
 		start = "2020-05-23"
 		end = "2019-06-12"
