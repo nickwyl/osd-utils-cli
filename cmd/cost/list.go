@@ -13,6 +13,7 @@ import (
 
 // listCmd represents the list command
 func newCmdList(streams genericclioptions.IOStreams) *cobra.Command {
+	ops := newListOptions(streams)
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the cost of each OU under given OU",
@@ -21,27 +22,33 @@ func newCmdList(streams genericclioptions.IOStreams) *cobra.Command {
 			awsClient, err := opsCost.initAWSClients()
 			cmdutil.CheckErr(err)
 
-			//Get flags
-			OUid, err := cmd.Flags().GetString("ou")
-			if err != nil {
-				log.Fatalln("OU flag:", err)
-			}
-			time, err := cmd.Flags().GetString("time")
-			if err != nil {
-				log.Fatalln("Time flag:", err)
-			}
+			OU := getOU(awsClient, ops.ou)
 
-			OU := getOU(awsClient, OUid)
-
-			if err := listCostsUnderOU(OU, awsClient, &time); err != nil {
+			if err := listCostsUnderOU(OU, awsClient, &ops.time); err != nil {
 				log.Fatalln("Error listing costs under OU:", err)
 			}
 		},
 	}
-	listCmd.Flags().String("ou", "ou-0wd6-aff5ji37", "get name of OU (default is name of v4's OU)")
-	listCmd.Flags().StringP("time", "t", "", "set time")
+	listCmd.Flags().StringVar(&ops.ou, "ou", "ou-0wd6-aff5ji37", "get name of OU (default is name of v4's OU)")
+	listCmd.Flags().StringVarP(&ops.time, "time", "t", "", "set time")
+	listCmd.Flags().BoolVar(&ops.csv, "csv", false, "output result as csv")
 
 	return listCmd
+}
+
+//Store flag options for get command
+type listOptions struct {
+	ou        string
+	time      string
+	csv       bool
+
+	genericclioptions.IOStreams
+}
+
+func newListOptions(streams genericclioptions.IOStreams) *listOptions {
+	return &listOptions{
+		IOStreams: streams,
+	}
 }
 
 //List the cost of each OU under given OU
@@ -52,9 +59,10 @@ func listCostsUnderOU(OU *organizations.OrganizationalUnit, awsClient awsprovide
 	}
 
 	var cost float64
+	var unit string
 
 	//Print total cost for given OU
-	if err := getOUCostRecursive(&cost, OU, awsClient, timePtr); err != nil {
+	if err := getOUCostRecursive(&cost, &unit, OU, awsClient, timePtr); err != nil {
 		return nil
 	}
 	if len(OUs) != 0 {
@@ -65,7 +73,7 @@ func listCostsUnderOU(OU *organizations.OrganizationalUnit, awsClient awsprovide
 	//Print costs of child OUs under given OU
 	for _, childOU := range OUs {
 		cost = 0
-		if err := getOUCostRecursive(&cost, childOU, awsClient, timePtr); err != nil {
+		if err := getOUCostRecursive(&cost, &unit, childOU, awsClient, timePtr); err != nil {
 			return nil
 		}
 		fmt.Printf("Cost of %s: %f\n", *childOU.Id, cost)

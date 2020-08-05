@@ -34,24 +34,24 @@ func newCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 			var unit string
 
 			if ops.recursive { //Get cost of given OU by aggregating costs of all (including immediate) accounts under OU
-				if err := getOUCostRecursive(&cost, OU, awsClient, &ops.time); err != nil {
+				if err := getOUCostRecursive(&cost, &unit, OU, awsClient, &ops.time); err != nil {
 					log.Fatalln("Error getting cost of OU recursively:", err)
 				}
 
 				if ops.csv { //If csv option specified, print result in csv
-					fmt.Printf("%s,%s%f\n", *OU.Name, unit, cost)
+					fmt.Printf("\n%s,%f %s\n\n", *OU.Name, cost, unit)
 				} else {
-					fmt.Printf("Cost of %s OU recursively is: %f%s\n", *OU.Name, cost, unit)
+					fmt.Printf("\nCost of %s OU recursively is: %f %s\n\n", *OU.Name, cost, unit)
 				}
 			} else { //Get cost of given OU by aggregating costs of only immediate accounts under given OU
-				if err := getOUCost(&cost, OU, awsClient, &ops.time); err != nil {
+				if err := getOUCost(&cost, &unit, OU, awsClient, &ops.time); err != nil {
 					log.Fatalln("Error getting cost of OU:", err)
 				}
 
 				if ops.csv {
-					fmt.Printf("%s,%s%f\n", *OU.Name, unit, cost)
+					fmt.Printf("\n%s,%s%f\n\n", *OU.Name, unit, cost)
 				} else {
-					fmt.Printf("Cost of %s OU is: %f%s\n", *OU.Name, cost, unit)
+					fmt.Printf("\nCost of %s OU is: %f%s\n\n", *OU.Name, cost, unit)
 				}
 			}
 		},
@@ -183,7 +183,7 @@ func getOUsRecursive(OU *organizations.OrganizationalUnit, awsClient awsprovider
 }
 
 //Get cost of given account
-func getAccountCost(accountID *string, awsClient awsprovider.Client, timePtr *string, cost *float64) error {
+func getAccountCost(accountID *string, unit *string, awsClient awsprovider.Client, timePtr *string, cost *float64) error {
 
 	start, end := getTimePeriod(timePtr)
 	granularity := "MONTHLY"
@@ -221,11 +221,14 @@ func getAccountCost(accountID *string, awsClient awsprovider.Client, timePtr *st
 		*cost += monthCost
 	}
 
+	//Save unit
+	*unit = *costs.ResultsByTime[0].Total["NetUnblendedCost"].Unit
+
 	return nil
 }
 
 //Get cost of given OU by aggregating costs of only immediate accounts under given OU
-func getOUCost(cost *float64, OU *organizations.OrganizationalUnit, awsClient awsprovider.Client, timePtr *string) error {
+func getOUCost(cost *float64, unit *string, OU *organizations.OrganizationalUnit, awsClient awsprovider.Client, timePtr *string) error {
 	//Populate accounts
 	accounts, err := getAccounts(OU, awsClient)
 	if err != nil {
@@ -234,7 +237,7 @@ func getOUCost(cost *float64, OU *organizations.OrganizationalUnit, awsClient aw
 
 	//Increment costs of accounts
 	for _, account := range accounts {
-		if err := getAccountCost(account, awsClient, timePtr, cost); err != nil {
+		if err := getAccountCost(account, unit, awsClient, timePtr, cost); err != nil {
 			return err
 		}
 	}
@@ -243,7 +246,7 @@ func getOUCost(cost *float64, OU *organizations.OrganizationalUnit, awsClient aw
 }
 
 //Get cost of given OU by aggregating costs of all (including immediate) accounts under OU
-func getOUCostRecursive(cost *float64, OU *organizations.OrganizationalUnit, awsClient awsprovider.Client, timePtr *string) error {
+func getOUCostRecursive(cost *float64, unit *string, OU *organizations.OrganizationalUnit, awsClient awsprovider.Client, timePtr *string) error {
 	//Populate OUs
 	OUs, err := getOUs(OU, awsClient)
 	if err != nil {
@@ -252,13 +255,13 @@ func getOUCostRecursive(cost *float64, OU *organizations.OrganizationalUnit, aws
 
 	//Loop through all child OUs, get their costs, and store it to cost of current OU
 	for _, childOU := range OUs {
-		if err := getOUCostRecursive(cost, childOU, awsClient, timePtr); err != nil {
+		if err := getOUCostRecursive(cost, unit, childOU, awsClient, timePtr); err != nil {
 			return err
 		}
 	}
 
 	//Return cost of child OUs + cost of immediate accounts under current OU
-	if err := getOUCost(cost, OU, awsClient, timePtr); err != nil {
+	if err := getOUCost(cost, unit, OU, awsClient, timePtr); err != nil {
 		return err
 	}
 
