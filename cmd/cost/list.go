@@ -24,7 +24,7 @@ func newCmdList(streams genericclioptions.IOStreams) *cobra.Command {
 
 			OU := getOU(awsClient, ops.ou)
 
-			if err := listCostsUnderOU(OU, awsClient, &ops.time, ops.csv); err != nil {
+			if err := listCostsUnderOU(OU, awsClient, ops); err != nil {
 				log.Fatalln("Error listing costs under OU:", err)
 			}
 		},
@@ -52,7 +52,7 @@ func newListOptions(streams genericclioptions.IOStreams) *listOptions {
 }
 
 //List the cost of each OU under given OU
-func listCostsUnderOU(OU *organizations.OrganizationalUnit, awsClient awsprovider.Client, timePtr *string, csv bool) error {
+func listCostsUnderOU(OU *organizations.OrganizationalUnit, awsClient awsprovider.Client, ops *listOptions) error {
 	OUs, err := getOUsRecursive(OU, awsClient)
 	if err != nil {
 		return err
@@ -61,34 +61,69 @@ func listCostsUnderOU(OU *organizations.OrganizationalUnit, awsClient awsprovide
 	var cost float64
 	var unit string
 
-	if err := getOUCostRecursive(&cost, &unit, OU, awsClient, timePtr); err != nil {
-		return nil
-	}
+	fmt.Println(ops.time)
+	fmt.Println(&ops.time)
 
-	//Print total cost for given OU
-	if csv {
-		fmt.Printf("OU,Cost(%s)\n%v,%f\n", unit, *OU.Name, cost)
-	} else {
-		if len(OUs) != 0 {
-			fmt.Printf("Cost of %s: %f\n\nCost of child OUs:\n", *OU.Name, cost)
-		} else {
-			fmt.Printf("Cost of %s: %f\nNo child OUs.\n", *OU.Name, cost)
-		}
+	if err := getOUCostRecursive(&cost, &unit, OU, awsClient, &ops.time); err != nil {
+		return err
 	}
+	output := outputCost1
+
+	output(cost, unit, OU, OUs, ops)
+	//Print total cost for given OU
+	//if csv {
+	//	fmt.Printf("\nOU,Cost(%s)\n%v,%f\n", unit, *OU.Name, cost)
+	//} else {
+	//	if len(OUs) != 0 {
+	//		fmt.Printf("\nCost of %s: %f %s\n\nCost of child OUs:\n", *OU.Name, cost, unit)
+	//	} else {
+	//		fmt.Printf("\nCost of %s: %f %s\nNo child OUs.\n", *OU.Name, cost, unit)
+	//	}
+	//}
 
 	//Print costs of child OUs under given OU
 	for _, childOU := range OUs {
 		cost = 0
-		if err := getOUCostRecursive(&cost, &unit, childOU, awsClient, timePtr); err != nil {
-			return nil
+		if err := getOUCostRecursive(&cost, &unit, childOU, awsClient, &ops.time); err != nil {
+			return err
 		}
+		output(cost, unit, OU, OUs, ops)
 
-		if csv {
-			fmt.Printf("%v,%f\n", *childOU.Name, cost)
-		} else {
-			fmt.Printf("Cost of %s: %f\n", *childOU.Name, cost)
-		}
+		//if csv {
+		//	fmt.Printf("%v,%f\n", *childOU.Name, cost)
+		//} else {
+		//	fmt.Printf("Cost of %s: %f %s\n", *childOU.Name, cost, unit)
+		//}
 	}
 
 	return nil
+}
+
+func outputCost1(cost float64, unit string, OU *organizations.OrganizationalUnit, OUs []*organizations.OrganizationalUnit, ops *listOptions) (y func()) {
+	var isChildOU bool
+
+	y = func() {
+		isChildOU = true
+	}
+
+	if !isChildOU {
+		if ops.csv {
+			fmt.Printf("\nOU,Cost(%s)\n%v,%f\n", unit, *OU.Name, cost)
+		} else {
+			if len(OUs) != 0 {
+				fmt.Printf("\nCost of %s: %f %s\n\nCost of child OUs:\n", *OU.Name, cost, unit)
+			} else {
+				fmt.Printf("\nCost of %s: %f %s\nNo child OUs.\n", *OU.Name, cost, unit)
+			}
+		}
+
+		//y()
+	} else {
+		if ops.csv {
+			fmt.Printf("%v,%f\n", *OU.Name, cost)
+		} else {
+			fmt.Printf("Cost of %s: %f %s\n", *OU.Name, cost, unit)
+		}
+	}
+	return
 }

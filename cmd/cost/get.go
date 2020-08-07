@@ -37,26 +37,15 @@ func newCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 				if err := getOUCostRecursive(&cost, &unit, OU, awsClient, &ops.time); err != nil {
 					log.Fatalln("Error getting cost of OU recursively:", err)
 				}
-
-				if ops.csv { //If csv option specified, print result in csv
-					fmt.Printf("\n%s,%f %s\n\n", *OU.Name, cost, unit)
-				} else {
-					fmt.Printf("\nCost of %s OU recursively is: %f %s\n\n", *OU.Name, cost, unit)
-				}
 			} else { //Get cost of given OU by aggregating costs of only immediate accounts under given OU
 				if err := getOUCost(&cost, &unit, OU, awsClient, &ops.time); err != nil {
 					log.Fatalln("Error getting cost of OU:", err)
 				}
-
-				if ops.csv {
-					fmt.Printf("\n%s,%s%f\n\n", *OU.Name, unit, cost)
-				} else {
-					fmt.Printf("\nCost of %s OU is: %f%s\n\n", *OU.Name, cost, unit)
-				}
 			}
+			outputCost(cost, unit, ops, OU)
 		},
 	}
-	getCmd.Flags().StringVar(&ops.ou, "ou", "ou-0wd6-aff5ji37", "get OU ID (default is v4)") //Default OU is v4
+	getCmd.Flags().StringVar(&ops.ou, "ou", "", "get OU ID")
 	getCmd.Flags().BoolVarP(&ops.recursive, "recursive", "r", false, "recurse through OUs")
 	getCmd.Flags().StringVarP(&ops.time, "time", "t", "", "set time")
 	getCmd.Flags().BoolVar(&ops.csv, "csv", false, "output result as csv")
@@ -300,4 +289,14 @@ func getTimePeriod(timePtr *string) (string, string) {
 	}
 
 	return start, end
+}
+
+func outputCost(cost float64, unit string, ops *getOptions, OU *organizations.OrganizationalUnit) {
+	if ops.csv { //If csv option specified, print result in csv
+		fmt.Printf("\n%s,%f (%s)\n\n", *OU.Name, cost, unit)
+	} else if ops.recursive {
+		fmt.Printf("\nCost of %s OU recursively is: %f %s\n\n", *OU.Name, cost, unit)
+	} else {
+		fmt.Printf("\nCost of %s OU is: %f %s\n\n", *OU.Name, cost, unit)
+	}
 }
