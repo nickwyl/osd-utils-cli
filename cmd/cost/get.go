@@ -42,7 +42,7 @@ func newCmdGet(streams genericclioptions.IOStreams) *cobra.Command {
 					log.Fatalln("Error getting cost of OU:", err)
 				}
 			}
-			outputCost(cost, unit, ops, OU)
+			printCostGet(cost, unit, ops, OU)
 		},
 	}
 	getCmd.Flags().StringVar(&ops.ou, "ou", "", "get OU ID")
@@ -291,12 +291,14 @@ func getTimePeriod(timePtr *string) (string, string) {
 	return start, end
 }
 
-func outputCost(cost float64, unit string, ops *getOptions, OU *organizations.OrganizationalUnit) {
+func printCostGet(cost float64, unit string, ops *getOptions, OU *organizations.OrganizationalUnit) {
 	if ops.csv { //If csv option specified, print result in csv
 		fmt.Printf("\n%s,%f (%s)\n\n", *OU.Name, cost, unit)
 	} else if ops.recursive {
-		fmt.Printf("\nCost of %s OU recursively is: %f %s\n\n", *OU.Name, cost, unit)
+		//fmt.Printf("\nCost of %s OU recursively is: %f %s\n\n", *OU.Name, cost, unit)
+		fmt.Printf("\nCost of all accounts under OU (%s, %s):\n%f %s\n\n", *OU.Id, *OU.Name, cost, unit)
 	} else {
-		fmt.Printf("\nCost of %s OU is: %f %s\n\n", *OU.Name, cost, unit)
+		//fmt.Printf("\nCost of %s OU is: %f %s\n\n", *OU.Name, cost, unit)
+		fmt.Printf("\nCost of OU: (%s, %s):\n%f %s\n\n", *OU.Id, *OU.Name, cost, unit)
 	}
 }

@@ -60,70 +60,42 @@ func listCostsUnderOU(OU *organizations.OrganizationalUnit, awsClient awsprovide
 
 	var cost float64
 	var unit string
-
-	fmt.Println(ops.time)
-	fmt.Println(&ops.time)
+	var isChildNode bool
 
 	if err := getOUCostRecursive(&cost, &unit, OU, awsClient, &ops.time); err != nil {
 		return err
 	}
-	output := outputCost1
 
-	output(cost, unit, OU, OUs, ops)
-	//Print total cost for given OU
-	//if csv {
-	//	fmt.Printf("\nOU,Cost(%s)\n%v,%f\n", unit, *OU.Name, cost)
-	//} else {
-	//	if len(OUs) != 0 {
-	//		fmt.Printf("\nCost of %s: %f %s\n\nCost of child OUs:\n", *OU.Name, cost, unit)
-	//	} else {
-	//		fmt.Printf("\nCost of %s: %f %s\nNo child OUs.\n", *OU.Name, cost, unit)
-	//	}
-	//}
+	//Print cost of given OU
+	printCostList(cost, unit, OU, ops, isChildNode)
 
 	//Print costs of child OUs under given OU
 	for _, childOU := range OUs {
 		cost = 0
+		isChildNode = true
+
 		if err := getOUCostRecursive(&cost, &unit, childOU, awsClient, &ops.time); err != nil {
 			return err
 		}
-		output(cost, unit, OU, OUs, ops)
-
-		//if csv {
-		//	fmt.Printf("%v,%f\n", *childOU.Name, cost)
-		//} else {
-		//	fmt.Printf("Cost of %s: %f %s\n", *childOU.Name, cost, unit)
-		//}
+		printCostList(cost, unit, childOU, ops, isChildNode)
 	}
 
 	return nil
 }
 
-func outputCost1(cost float64, unit string, OU *organizations.OrganizationalUnit, OUs []*organizations.OrganizationalUnit, ops *listOptions) (y func()) {
-	var isChildOU bool
-
-	y = func() {
-		isChildOU = true
-	}
-
-	if !isChildOU {
+func printCostList(cost float64, unit string, OU *organizations.OrganizationalUnit, ops *listOptions, isChildNode bool) {
+	if !isChildNode {
 		if ops.csv {
 			fmt.Printf("\nOU,Cost(%s)\n%v,%f\n", unit, *OU.Name, cost)
 		} else {
-			if len(OUs) != 0 {
-				fmt.Printf("\nCost of %s: %f %s\n\nCost of child OUs:\n", *OU.Name, cost, unit)
-			} else {
-				fmt.Printf("\nCost of %s: %f %s\nNo child OUs.\n", *OU.Name, cost, unit)
-			}
-		}
-
-		//y()
-	} else {
-		if ops.csv {
-			fmt.Printf("%v,%f\n", *OU.Name, cost)
-		} else {
-			fmt.Printf("Cost of %s: %f %s\n", *OU.Name, cost, unit)
+			fmt.Printf("\nListing costs of OU (%s, %s) and all its child OUs:\n\n", *OU.Id, *OU.Name)
+			fmt.Printf("%-30s%-30s%-30s%-30s\n", "OU ID", "OU Name", "Cost", "Unit")
 		}
 	}
-	return
+
+	if ops.csv {
+		fmt.Printf("%v,%f\n", *OU.Name, cost)
+	} else {
+		fmt.Printf("%-30s%-30s%-30f%-30s\n", *OU.Id, *OU.Name, cost, unit)
+	}
 }
